@@ -1,0 +1,83 @@
+---
+title: "Stat184 NHL final project"
+---
+
+install.packages(c("ggplot2", "dplyr", "knitr", "kableExtra", "rmarkdown"))
+---
+
+## Introduction
+
+The primary goal of this analysis is to determine whether the position of an NHL player significantly affects their scoring percentage. Understanding these differences can provide insights into player performance and strategies for team composition.
+
+## Methods
+
+### Data Source
+
+The dataset was collected from the Score Network, detailing NHL games from 2019–2021. It includes player performance metrics, such as goals, shots, and player positions.
+
+### Data Wrangling
+
+The raw dataset was cleaned to ensure its suitability for analysis. Key steps included addressing missing values and creating a new variable, `Scoring Percentage`, which represents the proportion of successful goals out of total shots taken by a player. This was calculated using the formula:
+
+$$
+\text{Scoring Percentage} = \left( \frac{\text{Goals}}{\text{Shots}} \right) \times 100
+$$
+
+This new attribute provides a standardized metric for comparing player performance across different positions.
+
+## Results
+
+### Summary Statistics
+
+Table 1 summarizes the scoring percentages by player position.
+
+\`\`\`{r setup, include=FALSE}
+
+\# Load necessary libraries
+
+library(tidyverse)
+
+library(janitor)
+
+library(knitr)
+
+# Load and clean the data
+
+data \<- read_csv("NHL Shooter Performance 2019-2021.csv") %\>% clean_names() \# Ensures consistent column naming
+
+# Handle missing values (example: remove rows with NA)
+
+data \<- data %\>% drop_na()
+
+# Create a new column for scoring percentage
+
+data \<- data %\>% mutate(scoring_percentage = (goals / shots) \* 100)
+
+# Summary statistics for scoring percentage by position
+
+summary_stats \<- data %\>% group_by(position) %\>% summarise( mean_scoring = mean(scoring_percentage, na.rm = TRUE), median_scoring = median(scoring_percentage, na.rm = TRUE), sd_scoring = sd(scoring_percentage, na.rm = TRUE), n = n() ) %\>% arrange(desc(mean_scoring))
+
+# Display the table
+
+kable(summary_stats, caption = "Summary Statistics of Scoring Percentage by Position")
+
+ggplot(data, aes(x = position, y = scoring_percentage, fill = position)) +
+geom_boxplot(alpha = 0.7) +
+theme_minimal() +
+labs(
+title = "Distribution of Scoring Percentage by Position",
+x = "Position",
+y = "Scoring Percentage",
+fill = "Position"
+)
+
+ggplot(summary_stats, aes(x = reorder(position, -mean_scoring), y = mean_scoring, fill = position)) +
+geom_bar(stat = "identity", alpha = 0.8) +
+theme_minimal() +
+labs(
+title = "Mean Scoring Percentage by Position",
+x = "Position",
+y = "Mean Scoring Percentage",
+fill = "Position"
+) +
+geom_text(aes(label = round(mean_scoring, 1)), vjust = -0.5, size = 3.5)
